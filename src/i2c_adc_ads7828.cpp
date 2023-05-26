@@ -130,7 +130,11 @@ uint8_t ADS7828Channel::index()
 void ADS7828Channel::newSample(uint16_t sample)
 {
   this->index_++;
-  if (index_ >= (1 << MOVING_AVERAGE_BITS_)) this->index_ = 0;
+  if (index_ >= (1 << MOVING_AVERAGE_BITS_)) {
+    this->index_ = 0;
+    // At least one rollover -- moving average array is filled
+    this->avgInit_ = true;
+  }
   this->total_ -= samples_[index_];
   this->samples_[index_] = sample;
   this->total_ += samples_[index_];
@@ -149,6 +153,7 @@ void ADS7828Channel::newSample(uint16_t sample)
 void ADS7828Channel::reset()
 {
   this->index_ = this->total_ = 0;
+  this->avgInit_ = false;
   for (uint8_t k = 0; k < (1 << MOVING_AVERAGE_BITS_); k++)
   {
     this->samples_[k] = 0;
@@ -247,7 +252,11 @@ uint8_t ADS7828Channel::update()
 /// \endcode
 uint16_t ADS7828Channel::value()
 {
-  uint16_t r = (total_ >> MOVING_AVERAGE_BITS_);
+  uint16_t r = 0;
+  if (avgInit_)
+    r = total_ >> MOVING_AVERAGE_BITS_;
+  else if (index_ > 0)
+    r = total_ / index_;
   return map(r, DEFAULT_MIN_SCALE, DEFAULT_MAX_SCALE, minScale, maxScale);
 }
 

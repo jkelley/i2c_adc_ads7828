@@ -257,6 +257,9 @@ class ADS7828Channel
     /// (Unscaled) running total of moving average array elements.
     uint16_t total_;
 
+    /// Moving average array has been initialized
+    bool avgInit_;
+
     // ............................................. static private attributes
     /// Quantity of samples to be averaged =
     ///   2<sup>\ref MOVING_AVERAGE_BITS_</sup>.
